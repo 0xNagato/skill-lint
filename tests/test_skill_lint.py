@@ -156,6 +156,30 @@ class TestMcpRules(unittest.TestCase):
                 "required": ["query"], "additionalProperties": False}}])
         self.assertIn("MC004", codes(rep.findings))
 
+    def test_documented_server_side_validation_clears_mc004(self):
+        """MC004's own fix text offers server-side validation as a remedy, so a
+        param that documents a concrete mechanism must not still be flagged."""
+        rep = lint_tools([{
+            "name": "search",
+            "description": "Search files under the server root and return matches.",
+            "inputSchema": {"type": "object", "properties": {
+                "path": {"type": "string", "description":
+                         "Subdirectory relative to the server root. Validated "
+                         "server-side: resolved, canonicalised, and refused if "
+                         "it escapes the root."}},
+                "required": ["path"], "additionalProperties": False}}])
+        self.assertNotIn("MC004", codes(rep.findings))
+
+    def test_vague_reassurance_does_not_clear_mc004(self):
+        rep = lint_tools([{
+            "name": "search",
+            "description": "Search files under the server root and return matches.",
+            "inputSchema": {"type": "object", "properties": {
+                "path": {"type": "string",
+                         "description": "A safe, trusted path. Don't worry."}},
+                "required": ["path"], "additionalProperties": False}}])
+        self.assertIn("MC004", codes(rep.findings))
+
     def test_missing_descriptions_and_duplicates(self):
         rep = lint_tools([
             {"name": "a", "inputSchema": {"type": "object", "properties": {}}},

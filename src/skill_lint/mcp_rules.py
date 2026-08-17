@@ -53,6 +53,21 @@ INJECTION_PRONE = re.compile(
     r"\A(command|cmd|script|shell|exec|eval|code|query|sql|path|file|filepath|"
     r"file_path|dir|directory|url|uri|endpoint|host|target|prompt|template)\Z", re.I)
 
+# A schema constraint is not the only valid mitigation. Some values — a regex,
+# a path — are inherently free-form, and the real defence is server-side
+# validation. This rule's own guidance says so, so the check has to honour it:
+# a parameter that documents concrete validation is mitigated, not unconstrained.
+# Deliberately demanding: vague reassurance like "safe" or "trusted" does not
+# count, only a stated mechanism.
+VALIDATION_DOCUMENTED = re.compile(
+    r"(validated server[- ]side|server[- ]side validation|"
+    r"(resolved|canonicalis|canonicaliz|normalis|normaliz)\w*\b[^.]{0,80}\b"
+    r"(refus|reject|denied|confined|restricted)|"
+    r"(refus|reject|denied|confined|restricted)\w*\b[^.]{0,80}\b"
+    r"(root|allowlist|allow[- ]list|whitelist|sandbox|workspace)|"
+    r"confined to|restricted to the|must resolve (inside|within)|"
+    r"validated before|checked against an? (allowlist|allow[- ]list))", re.I)
+
 TOOL_COUNT_WARN = 40
 DESC_TOKEN_WARN = 250
 TOTAL_TOKEN_WARN = 8000
@@ -133,15 +148,19 @@ def lint_tools(payload, source: str = "<schema>") -> Report:
                 rep.add(Finding("MC002", "warn",
                                 f"parameter '{pname}' has no description", name,
                                 fix="Undescribed parameters get guessed at."))
+            pdesc = str(pschema.get("description") or "")
             if (pschema.get("type") == "string"
                     and INJECTION_PRONE.match(pname)
-                    and not any(k in pschema for k in ("enum", "pattern", "format"))):
+                    and not any(k in pschema for k in ("enum", "pattern", "format"))
+                    and not VALIDATION_DOCUMENTED.search(pdesc)):
                 rep.add(Finding("MC004", "warn",
                                 f"unconstrained free-form '{pname}'", name,
-                                f"type=string, no enum/pattern/format",
+                                "type=string, no enum/pattern/format, and no "
+                                "server-side validation described",
                                 "This is the surface a malicious document steers. "
-                                "Constrain it, or validate server-side and say so "
-                                "in the description."))
+                                "Constrain it in the schema, or validate "
+                                "server-side and state the mechanism in the "
+                                "parameter description."))
 
         # Match the name and the opening sentence only. A destructive verb
         # later in the description is usually context ("use before publishing"),
