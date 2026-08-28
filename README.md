@@ -1,5 +1,7 @@
 # skill-lint
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/0xnagato-skill-lint-10hdro)](https://m8ven.ai/mcp/0xnagato-skill-lint-10hdro)
+
 Lint agent `SKILL.md` files and MCP tool schemas.
 
 Agent skills and MCP tools rarely fail loudly. They fail by never being chosen —
