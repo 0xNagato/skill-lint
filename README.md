@@ -14,7 +14,7 @@ file that isn't there.
 Zero dependencies. Runs as a CLI or as an MCP server.
 
 ```bash
-uv tool install skill-lint          # or: pipx install skill-lint
+uv tool install git+https://github.com/0xNagato/skill-lint   # or: pipx install git+https://github.com/0xNagato/skill-lint
 
 skill-lint ~/.claude/skills          # lint a skill library
 skill-lint --mcp tools.json          # lint an MCP tools/list payload
@@ -111,7 +111,7 @@ isn't what the tool does, and matching it turns the rule into noise.
 ## CI
 
 ```yaml
-- run: pipx install skill-lint
+- run: pipx install git+https://github.com/0xNagato/skill-lint
 - run: skill-lint .claude/skills --format github --fail-on warn
 ```
 
